@@ -46,8 +46,8 @@ In this example, there are 7 measurements that are larger than the previous meas
 How many measurements are larger than the previous measurement?
  */
 
-func one() interface{} {
-	f, err := os.Open("one_input.txt")
+func One() interface{} {
+	f, err := os.Open("input/one.txt")
 	if err != nil {
 		fmt.Printf("input file does not exist. Error %v\n", err)
 	}
