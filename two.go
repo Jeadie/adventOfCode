@@ -1,5 +1,13 @@
 package main
 
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
 /**
 Now, you need to figure out how to pilot this thing.
 
@@ -32,6 +40,36 @@ After following these instructions, you would have a horizontal position of 15 a
 together produces 150.) Calculate the horizontal position and depth you would have after following the planned course.
 What do you get if you multiply your final horizontal position by your final depth?
  */
+
+const (
+	forward = "forward"
+	down = "down"
+	up = "up"
+)
+
 func Two() interface{} {
-	return nil
+	f, err := os.Open("input/two.txt")
+	if err != nil {
+		fmt.Printf("input file does not exist. Error %v\n", err)
+	}
+	defer f.Close()
+	s := bufio.NewScanner(f)
+	h := int64(0)
+	d := int64(0)
+
+	for s.Scan()  {
+		parameters:= strings.SplitN(s.Text(), " ", 2)
+		v, _ := strconv.ParseInt(parameters[1], 10, 64)
+		switch parameters[0] {
+		case down:
+			d += v
+
+		case up:
+			d -= v
+
+		case forward:
+			h += v
+		}
+	}
+	return h * d
 }
