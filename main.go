@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 )
 
 type adventCode struct {
@@ -12,8 +14,7 @@ type adventCode struct {
 func main() {
 	days := [25]adventCode{{One}, {Two}, {Three}, {Four}}
 
-	//adventDay, _ := strconv.ParseInt(os.Args[1], 10, 8)
-	adventDay := 3
+	adventDay, _ := strconv.ParseInt(os.Args[1], 10, 8)
 	x := days[adventDay-1].fn()
 	fmt.Println(x)
 }
