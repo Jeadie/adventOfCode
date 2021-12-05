@@ -43,71 +43,6 @@ gamma rate and epsilon rate, then multiply them together. What is the power cons
 represent your answer in decimal, not binary.)
 */
 func Three() interface{} {
-	f, err := os.Open("input/three.txt")
-	if err != nil {
-		fmt.Printf("input file does not exist. Error %v\n", err)
-		return nil
-	}
-	defer f.Close()
-	s := bufio.NewScanner(f)
-
-	n := 0
-	rate := [12]int64{0,0,0,0,0,0,0,0,0,0,0,0}
-	for s.Scan() {
-		l := s.Text()
-
-		for i, b := range l {
-			rate[i] += parseAsciiBit(b)
-		}
-		n++
-	}
-	gamma := computeGamma(rate, n)
-
-	// 63753
-	return computeResult(gamma)
-}
-
-func computeResult(gamma [12]int64) int64 {
-	g := int64(0)
-	e := int64(0)
-
-	for i := range gamma {
-		pow := math.Pow(float64(i), 2)
-		g += int64(pow)*gamma[i]
-
-		// gamma is most common, epsilon is least common.
-		e += int64(pow)*(1-gamma[i])
-	}
-	return g*e
-}
-
-func computeGamma(rates [12]int64, n int) [12]int64 {
-	g := [12]int64{}
-	for i, r := range rates {
-		if 2*r >= int64(n) {
-			g[i] = 1
-		} else {
-			g[i] = 0
-		}
-	}
-	return g
-}
-
-func parseAsciiBit(b int32) int64{
-	if b == 49 {
-		return 1
-	} else if b == 48 {
-		return 0
-	}
-	panic(fmt.Sprintf("Ascii bit %d was neither a '0' (48) or '1' (49)", b))
-}
-
-type Result struct {
-	i int
-	v int64
-}
-
-func ThreeChan() interface{} {
 	// Make go routine that processes specific column of binary input.
 	ins := [12]chan string{}
 	outputs := make(chan Result)
@@ -165,5 +100,45 @@ func ThreeChan() interface{} {
 
 	// 63753
 	return computeResult(computeGamma(rate, n))
+}
+
+func computeResult(gamma [12]int64) int64 {
+	g := int64(0)
+	e := int64(0)
+
+	for i := range gamma {
+		pow := math.Pow(float64(i), 2)
+		g += int64(pow)*gamma[i]
+
+		// gamma is most common, epsilon is least common.
+		e += int64(pow)*(1-gamma[i])
+	}
+	return g*e
+}
+
+func computeGamma(rates [12]int64, n int) [12]int64 {
+	g := [12]int64{}
+	for i, r := range rates {
+		if 2*r >= int64(n) {
+			g[i] = 1
+		} else {
+			g[i] = 0
+		}
+	}
+	return g
+}
+
+func parseAsciiBit(b int32) int64{
+	if b == 49 {
+		return 1
+	} else if b == 48 {
+		return 0
+	}
+	panic(fmt.Sprintf("Ascii bit %d was neither a '0' (48) or '1' (49)", b))
+}
+
+type Result struct {
+	i int
+	v int64
 }
 
