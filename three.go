@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sync"
 )
 
 /**
@@ -45,6 +46,7 @@ func Three() interface{} {
 	f, err := os.Open("input/three.txt")
 	if err != nil {
 		fmt.Printf("input file does not exist. Error %v\n", err)
+		return nil
 	}
 	defer f.Close()
 	s := bufio.NewScanner(f)
@@ -57,22 +59,24 @@ func Three() interface{} {
 		for i, b := range l {
 			rate[i] += parseAsciiBit(b)
 		}
-		n++;
+		n++
 	}
 	gamma := computeGamma(rate, n)
-	epsilon := gammaToEpsilon(gamma)
 
-	return computeResult(gamma, epsilon)
+	// 63753
+	return computeResult(gamma)
 }
 
-func computeResult(gamma [12]int64, epsilon [12]int64) int64 {
+func computeResult(gamma [12]int64) int64 {
 	g := int64(0)
 	e := int64(0)
 
 	for i := range gamma {
 		pow := math.Pow(float64(i), 2)
 		g += int64(pow)*gamma[i]
-		e += int64(pow)*epsilon[i]
+
+		// gamma is most common, epsilon is least common.
+		e += int64(pow)*(1-gamma[i])
 	}
 	return g*e
 }
@@ -89,14 +93,6 @@ func computeGamma(rates [12]int64, n int) [12]int64 {
 	return g
 }
 
-func gammaToEpsilon(gamma [12]int64) [12]int64 {
-	e := [12]int64{}
-	for i, g := range gamma {
-		e[i] = 1-g
-	}
-	return e
-}
-
 func parseAsciiBit(b int32) int64{
 	if b == 49 {
 		return 1
@@ -105,3 +101,69 @@ func parseAsciiBit(b int32) int64{
 	}
 	panic(fmt.Sprintf("Ascii bit %d was neither a '0' (48) or '1' (49)", b))
 }
+
+type Result struct {
+	i int
+	v int64
+}
+
+func ThreeChan() interface{} {
+	// Make go routine that processes specific column of binary input.
+	ins := [12]chan string{}
+	outputs := make(chan Result)
+	wg := sync.WaitGroup{}
+	wg.Add(13) // 12 ins & input goroutines. Output requires separate.
+
+	for i := range ins {
+		ins[i] = make(chan string)
+		go func(in chan string, out chan Result, wg *sync.WaitGroup, i int) {
+			for v := range in {
+				out <- Result{
+					i: i,
+					v: parseAsciiBit(int32(v[i])),
+				}
+			}
+			wg.Done()
+		}(ins[i], outputs, &wg, i)
+	}
+
+	// For each line in file, send to channels, then close inputs.
+	n := 0
+	go func(filename string, wg *sync.WaitGroup, n *int) {
+		f, _ := os.Open(filename)
+		defer f.Close()
+		s := bufio.NewScanner(f)
+		for s.Scan() {
+			s := s.Text()
+			for _, c := range ins {
+				c <- s
+			}
+			*n++
+		}
+		for _, in := range ins {
+			close(in)
+		}
+		wg.Done()
+	}("input/three.txt", &wg, &n)
+
+	// Put each result into correct column
+	rate := [12]int64{0,0,0,0,0,0,0,0,0,0,0,0}
+	reduceWg := sync.WaitGroup{}
+	reduceWg.Add(1)
+	go func(out chan Result, wg *sync.WaitGroup, result *[12]int64) {
+		for r := range out {
+			rate[r.i] += r.v
+		}
+		wg.Done()
+	}(outputs, &reduceWg, &rate)
+
+	wg.Wait()
+	// Close outputs and wait for final goroutine to finish processing results.
+	close(outputs)
+	reduceWg.Wait()
+
+
+	// 63753
+	return computeResult(computeGamma(rate, n))
+}
+
