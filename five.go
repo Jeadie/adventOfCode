@@ -89,7 +89,7 @@ func createPoints(in chan LineSegment, out chan Z2) {
 	for l := range in {
 		if l.a.x == l.b.x {
 			a, b := getMinMax(l.a.y, l.b.y)
-			for i := a; i<=b; i++ {
+			for i := a; i <= b; i++ {
 				out <- Z2{
 					x: l.a.x,
 					y: i,
@@ -97,7 +97,7 @@ func createPoints(in chan LineSegment, out chan Z2) {
 			}
 		} else if l.a.y == l.b.y {
 			a, b := getMinMax(l.a.x, l.b.x)
-			for i := a; i<=b; i++ {
+			for i := a; i <= b; i++ {
 				out <- Z2{
 					x: i,
 					y: l.a.y,
@@ -148,15 +148,15 @@ func (z Z2) toString() string {
 }
 
 type Grid struct {
-	points sync.Map // Z2 -> uint32
+	points  sync.Map // Z2 -> uint32
 	counter uint8
 }
 
 func (g *Grid) increment(z Z2) {
-	a:= uint32(0)
+	a := uint32(0)
 	v, _ := g.points.LoadOrStore(z.toString(), &a)
 
-	r:= atomic.AddUint32(v.(*uint32), 1)
+	r := atomic.AddUint32(v.(*uint32), 1)
 
 	// Because adding to g.points is atomic, the value returned will be unique (for given z2).
 	if r == 2 {

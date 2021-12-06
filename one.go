@@ -44,7 +44,7 @@ measurement before the first measurement.) In the example above, the changes are
 
 In this example, there are 7 measurements that are larger than the previous measurement.
 How many measurements are larger than the previous measurement?
- */
+*/
 
 func One() interface{} {
 	f, err := os.Open("input/one.txt")
@@ -56,7 +56,7 @@ func One() interface{} {
 	c := 0
 	i, _ := strconv.ParseInt(s.Text(), 10, 64)
 
-	for s.Scan()  {
+	for s.Scan() {
 		i2, _ := strconv.ParseInt(s.Text(), 10, 64)
 		if i2 > i {
 			c++

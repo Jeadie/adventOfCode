@@ -23,7 +23,6 @@ func intToName(x uint8) string {
 	return fmt.Sprintf("input/%s.txt", FilenameArray[x-1])
 }
 
-
 func getMinMax(x uint32, y uint32) (uint32, uint32) {
 	var a, b uint32
 	if x < y {

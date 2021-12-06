@@ -82,7 +82,7 @@ func Three() interface{} {
 	}("input/three.txt", &wg, &n)
 
 	// Put each result into correct column
-	rate := [12]int64{0,0,0,0,0,0,0,0,0,0,0,0}
+	rate := [12]int64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	reduceWg := sync.WaitGroup{}
 	reduceWg.Add(1)
 	go func(out chan Result, wg *sync.WaitGroup, result *[12]int64) {
@@ -97,7 +97,6 @@ func Three() interface{} {
 	close(outputs)
 	reduceWg.Wait()
 
-
 	// 63753
 	return computeResult(computeGamma(rate, n))
 }
@@ -108,12 +107,12 @@ func computeResult(gamma [12]int64) int64 {
 
 	for i := range gamma {
 		pow := math.Pow(float64(i), 2)
-		g += int64(pow)*gamma[i]
+		g += int64(pow) * gamma[i]
 
 		// gamma is most common, epsilon is least common.
-		e += int64(pow)*(1-gamma[i])
+		e += int64(pow) * (1 - gamma[i])
 	}
-	return g*e
+	return g * e
 }
 
 func computeGamma(rates [12]int64, n int) [12]int64 {
@@ -128,7 +127,7 @@ func computeGamma(rates [12]int64, n int) [12]int64 {
 	return g
 }
 
-func parseAsciiBit(b int32) int64{
+func parseAsciiBit(b int32) int64 {
 	if b == 49 {
 		return 1
 	} else if b == 48 {
@@ -141,4 +140,3 @@ type Result struct {
 	i int
 	v int64
 }
-

@@ -69,7 +69,7 @@ the entire top row is marked: 14 21 17 24 4). The score of the winning board can
 the sum of all unmarked numbers on that board; in this case, the sum is 188. Then, multiply that sum by the number that
 was just called when the board won, 24, to get the final score, 188 * 24 = 4512. To guarantee victory against the giant
 squid, figure out which board will win first. What will your final score be if you choose that board?
- */
+*/
 func Four() interface{} {
 	f, err := os.Open("input/four.txt")
 	if err != nil {
@@ -81,7 +81,7 @@ func Four() interface{} {
 	const boardProcessingCount = 1
 
 	wg := sync.WaitGroup{}
-	wg.Add(1+boardProcessingCount) // input & output
+	wg.Add(1 + boardProcessingCount) // input & output
 
 	// Construct Draw
 	s.Scan()
@@ -90,10 +90,10 @@ func Four() interface{} {
 	// Send out boards
 	boards := make(chan *Board) // closed in inputBoards
 	go inputBoards(s, boards, &wg)
-	
+
 	// Each Board goroutine
 	candidates := make(chan *FourCandidate) // closed after wg.Wait()
-	for i:=0; i< boardProcessingCount; i++ {
+	for i := 0; i < boardProcessingCount; i++ {
 		go boardProcessing(boards, candidates, d, &wg)
 	}
 
@@ -107,7 +107,7 @@ func Four() interface{} {
 
 	// Wait for best, compute numeric result.
 	// ?
-	return computeOutput(<- best, d)
+	return computeOutput(<-best, d)
 }
 
 func computeOutput(c *FourCandidate, d *Draw) interface{} {
@@ -141,7 +141,7 @@ func boardProcessing(in chan *Board, out chan *FourCandidate, d *Draw, w *sync.W
 	defer w.Done()
 	for b := range in {
 		// Construct row and column of index i simultaneously.
-		for i:= uint8(0); i < 5; i ++ {
+		for i := uint8(0); i < 5; i++ {
 			row := [5]string{}
 			col := [5]string{}
 
@@ -181,10 +181,10 @@ func inputBoards(s *bufio.Scanner, out chan *Board, wg *sync.WaitGroup) {
 
 	for s.Scan() {
 		rows := [size][size]string{}
-		for i:=0; i<size; i++ {
+		for i := 0; i < size; i++ {
 			if s.Scan() {
 
-				copy(rows[i][:], strings.SplitN(strings.Replace(s.Text(),  "  ", " ", -1), " ", size))
+				copy(rows[i][:], strings.SplitN(strings.Replace(s.Text(), "  ", " ", -1), " ", size))
 			}
 		}
 		out <- createBoard(rows)
@@ -200,7 +200,7 @@ type FourCandidate struct {
 func constructDraw(raw string) *Draw {
 	d := Draw{
 		order: make(map[string]uint8),
-		line: strings.Split(raw, ","),
+		line:  strings.Split(raw, ","),
 	}
 	for i, s := range d.line {
 		d.order[s] = uint8(i)

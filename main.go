@@ -7,7 +7,7 @@ import (
 )
 
 type adventCode struct {
-	fn func () interface{}
+	fn func() interface{}
 }
 
 // To consider: https://felixge.de/2021/12/01/advent-of-go-profiling-2021-day-1-1/
