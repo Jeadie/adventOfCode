@@ -40,3 +40,10 @@ func unsafeUintParse(x string) uint64 {
 	y, _ := strconv.ParseUint(x, 10, 64)
 	return y
 }
+
+func scannerToChannel(s *bufio.Scanner, output chan string) {
+	defer close(output)
+	for s.Scan() {
+		output <- s.Text()
+	}
+}

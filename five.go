@@ -57,24 +57,38 @@ At how many points do at least two lines overlap?
 func Five() interface{} {
 	lines := make(chan LineSegment)
 	z2s := make(chan Z2)
-
+	inputs := make(chan string)
 	g := Grid{
 		points:  sync.Map{},
 		counter: 0,
 	}
 
+	const LinesGoroutines = 1
+	const PointsGoroutines = 1
+	const ReduceGoroutines = 1
+
+	scannerToChannel(GetScanner(5), inputs)
+
 	// Goroutine: Send out line segments
-	go createLines(lines)
+	//multiplexGoroutine(inputs, lines, createLines, 4)
+	for i := 0; i < LinesGoroutines; i++ {
+		go createLines(inputs, lines)
+	}
 
 	// Goroutine: Process line segment -> points
-	go createPoints(lines, z2s)
+	for i := 0; i < PointsGoroutines; i++ {
+		go createPoints(lines, z2s)
+	}
 
 	// Goroutine: Mark grid points as line covered
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go markGridPoints(z2s, &g, &wg)
-
+	wg.Add(ReduceGoroutines)
+	for i := 0; i < ReduceGoroutines; i++ {
+		go markGridPoints(z2s, &g, &wg)
+	}
 	wg.Wait()
+
+	// 527
 	return g.counter
 }
 
@@ -108,11 +122,9 @@ func createPoints(in chan LineSegment, out chan Z2) {
 	close(out)
 }
 
-func createLines(out chan LineSegment) {
-	s := GetScanner(5)
-	// Line format: 976,453 -> 561,38
-	for s.Scan() {
-		points := strings.SplitN(s.Text(), " -> ", 2)
+func createLines(in chan string, out chan LineSegment) {
+	for s := range in {
+		points := strings.SplitN(s, " -> ", 2)
 		a := LineSegment{
 			a: stringToZ2(points[0]),
 			b: stringToZ2(points[1]),

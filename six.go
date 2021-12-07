@@ -59,10 +59,10 @@ After 18 days: 6,0,6,4,5,6,0,1,1,2,6,0,1,1,1,2,2,3,3,4,6,7,8,8,8,8
 Each day, a 0 becomes a 6 and adds a new 8 to the end of the list, while each other number decreases by 1 if it was
 present at the start of the day. In this example, after 18 days, there are a total of 26 fish. After 80 days, there
 would be a total of 5934. Find a way to simulate lanternfish. How many lanternfish would there be after 80 days?
- */
+*/
 
 func Six() interface{} {
-	l := LanternFish{fishDayCount: [9]uint32{0,0,0,0,0,0,0,0,0}}
+	l := LanternFish{fishDayCount: [9]uint32{0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	addFishFromFile(&l, GetScanner(6))
 	for i := 0; i < 80; i++ {
 		l.runDay()
