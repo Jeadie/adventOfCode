@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 func GetScanner(x uint8) *bufio.Scanner {
@@ -33,4 +34,9 @@ func getMinMax(x uint32, y uint32) (uint32, uint32) {
 		b = x
 	}
 	return a, b
+}
+
+func unsafeUintParse(x string) uint64 {
+	y, _ := strconv.ParseUint(x, 10, 64)
+	return y
 }
