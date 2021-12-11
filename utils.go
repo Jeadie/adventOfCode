@@ -41,6 +41,11 @@ func unsafeUintParse(x string) uint64 {
 	return y
 }
 
+func unsafeFloatParse(x string) float64 {
+	y, _ := strconv.ParseFloat(x, 10)
+	return y
+}
+
 func scannerToChannel(s *bufio.Scanner, output chan string) {
 	defer close(output)
 	for s.Scan() {
