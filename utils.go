@@ -46,9 +46,32 @@ func unsafeFloatParse(x string) float64 {
 	return y
 }
 
+func maxInt(x int, y int) int {
+	if x < y {
+		return y
+	}
+	return x
+}
+func minInt(x int, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func makeIntChan(a int, b int) chan int {
+	c := make(chan int, b-a)
+	defer close(c)
+	for i := a; i < b; i++ {
+		c <- i
+	}
+	return c
+}
+
 func scannerToChannel(s *bufio.Scanner, output chan string) {
 	defer close(output)
 	for s.Scan() {
 		output <- s.Text()
 	}
 }
+
