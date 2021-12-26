@@ -63,35 +63,34 @@ In the above example, an illegal ) was found twice (2*3 = 6 points), an illegal 
 
 Find the first illegal character in each corrupted line of the navigation subsystem. What is the total syntax error score for those errors?
 
- */
+*/
 var characterScores = map[uint8]uint64{
-	41: 3, // )
-	93: 57, // ]
-	125: 1197, // }
-	62 : 25137, // >
+	41:  3,     // )
+	93:  57,    // ]
+	125: 1197,  // }
+	62:  25137, // >
 }
 
 var closedCharacters = map[uint8]bool{
-	41: true, // )
-	62: true, // >
-	93: true, // ]
+	41:  true, // )
+	62:  true, // >
+	93:  true, // ]
 	125: true, // }
 
-	40: false, // (
-	60: false, // <
-	91: false, // [
+	40:  false, // (
+	60:  false, // <
+	91:  false, // [
 	123: false, // {
 }
 
 var leftRightPairs = map[uint8]uint8{
-	40: 41,
-	60: 62,
-	91: 93,
+	40:  41,
+	60:  62,
+	91:  93,
 	123: 125,
 }
 
 const errorScoreGoroutines = 1
-
 
 func Ten() interface{} {
 
@@ -106,7 +105,7 @@ func Ten() interface{} {
 	for i := 0; i < errorScoreGoroutines; i++ {
 		go getErrorScores(inputs, scores, &wg)
 	}
-	go func( outputs chan uint64, wg *sync.WaitGroup) {
+	go func(outputs chan uint64, wg *sync.WaitGroup) {
 		wg.Wait()
 		close(outputs)
 	}(scores, &wg)
@@ -117,13 +116,13 @@ func Ten() interface{} {
 		defer close(result)
 		r := uint64(0)
 		for s := range scores {
-			r+=s
+			r += s
 		}
 		output <- r
 	}(result)
 
 	// 981444
-	return <- result
+	return <-result
 }
 
 func getErrorScores(inputs chan string, outputs chan uint64, wg *sync.WaitGroup) {
@@ -143,7 +142,7 @@ func getErrorScore(s string) uint64 {
 
 	stack := []uint8{s[0]}
 
-	for i := 1; i< len(s); i++ {
+	for i := 1; i < len(s); i++ {
 		// If it's a closing character, check its validity
 		if closedCharacters[s[i]] {
 			left := stack[len(stack)-1]
@@ -154,14 +153,14 @@ func getErrorScore(s string) uint64 {
 				stack = append(stack[:len(stack)-1])
 				//stack = stack[:maxInt(0, len(stack)-2)]
 
-			// Then it's an error, get score
+				// Then it's an error, get score
 			} else {
 				fmt.Println(characterScores[s[i]], s[:i+2])
 				fmt.Println()
 				return characterScores[s[i]]
 			}
 
-		// Add to stack
+			// Add to stack
 		} else {
 			stack = append(stack, s[i])
 		}
@@ -174,7 +173,6 @@ func isMatching(l uint8, r uint8) bool {
 	return leftRightPairs[l] == r
 }
 
-
 func sendLines(outputs chan string) {
 	defer close(outputs)
 	s := GetScanner(10)
@@ -182,4 +180,3 @@ func sendLines(outputs chan string) {
 		outputs <- s.Text()
 	}
 }
-

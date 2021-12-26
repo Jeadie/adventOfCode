@@ -323,7 +323,7 @@ const octopusFlashValue = 9
 func Eleven() interface{} {
 	oc := constructOctopusCavern()
 
-	for i := 0; i <iterations; i++ {
+	for i := 0; i < iterations; i++ {
 		fmt.Println("ITERATION", i)
 		oc = runIteration(oc)
 		fmt.Println(oc)
@@ -335,8 +335,8 @@ func runIteration(oc *OctopusCavern) *OctopusCavern {
 	// Let incrementing goroutines take arbitrarily designated rows
 	rowTokens := makeIntChan(0, oc.getRowCount())
 
-	octopusProcessEvents := makeRecursiveChan( 100)
-	resetEvents := makeRecursiveChan( 100)
+	octopusProcessEvents := makeRecursiveChan(100)
+	resetEvents := makeRecursiveChan(100)
 
 	wg := sync.WaitGroup{}
 
@@ -401,8 +401,8 @@ func incrementOctopusRow(oc *OctopusCavern, outputs []RecursiveChan, row int) {
 func processOctopusFlashEvent(oc *OctopusCavern, event *OctopusFlashEvent, flashEventConsumers []RecursiveChan) {
 	x, y := event.i, event.j
 
-	for i := maxInt(x-1, 0); i < minInt(x+1, oc.getRowCount()) ; i++ {
-		for j := maxInt(y-1, 0); j < minInt(y+1, oc.getRowCount()) ; j++ {
+	for i := maxInt(x-1, 0); i < minInt(x+1, oc.getRowCount()); i++ {
+		for j := maxInt(y-1, 0); j < minInt(y+1, oc.getRowCount()); j++ {
 			// Don't re-increment original flash event
 			if i != x || j != y {
 				incrementAndCheckFlash(oc, flashEventConsumers, i, j)
@@ -439,13 +439,13 @@ func constructOctopusCavern() *OctopusCavern {
 	}
 
 	return &OctopusCavern{
-		grid : rows,
+		grid:    rows,
 		flashes: int64(0),
 	}
 }
 
 type OctopusCavern struct {
-	grid [][]int64
+	grid    [][]int64
 	flashes int64
 }
 
@@ -468,7 +468,6 @@ func (oc *OctopusCavern) increment(i int, j int) int64 {
 	return v
 }
 
-
 func (oc *OctopusCavern) resetOctopus(i int, j int) {
 	//fmt.Println("RESET", i, j)
 	atomic.StoreInt64(&oc.grid[i][j], 0)
@@ -478,9 +477,8 @@ type OctopusFlashEvent struct {
 	i, j int
 }
 
-
 type RecursiveChan struct {
-	c chan OctopusFlashEvent
+	c       chan OctopusFlashEvent
 	counter *sync.WaitGroup
 }
 
@@ -498,14 +496,14 @@ func (r RecursiveChan) add(o OctopusFlashEvent) {
 
 func (r RecursiveChan) get() OctopusFlashEvent {
 	defer r.counter.Done()
-	return <- r.c
+	return <-r.c
 }
 
 func (r RecursiveChan) yielder() chan OctopusFlashEvent {
 	ch := make(chan OctopusFlashEvent)
 	go func() {
 		for true {
-			o, ok := <- r.c
+			o, ok := <-r.c
 			if !ok {
 				close(ch)
 				fmt.Println("Yielder stops yielding...")

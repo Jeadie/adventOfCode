@@ -81,7 +81,7 @@ type Appender struct {
 	m sync.Mutex
 }
 
-func (a *Appender) Append(s string)  {
+func (a *Appender) Append(s string) {
 	a.m.Lock()
 	a.l = append(a.l, s)
 	a.m.Unlock()

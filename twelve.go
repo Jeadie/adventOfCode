@@ -109,8 +109,7 @@ pj-fs
 start-RW
 
 How many paths through this cave system are there that visit small caves at most once?
- */
-
+*/
 
 func Twelve() interface{} {
 	gc := GraphConstructor{
@@ -125,7 +124,6 @@ func Twelve() interface{} {
 		}
 	}(ch)
 
-
 	// Process inputs
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -139,12 +137,14 @@ func Twelve() interface{} {
 	wg.Wait()
 
 	// Create graph from GraphConstructor
-	g:= CaveGraph{
+	g := CaveGraph{
 		adjacencyList: map[string][]string{},
 	}
 	for k := range getVertices(&gc) {
-		a, ok:= gc.vertexPairs.Load(k)
-		if !ok {continue}
+		a, ok := gc.vertexPairs.Load(k)
+		if !ok {
+			continue
+		}
 		g.adjacencyList[k] = a.(*Appender).GetSet()
 	}
 
@@ -162,7 +162,7 @@ func Twelve() interface{} {
 			path: []string{"start", e},
 			included: map[string]bool{
 				"start": true,
-				e: true,
+				e:       true,
 			},
 		})
 	}
@@ -172,7 +172,7 @@ func Twelve() interface{} {
 	rWg.Add(1)
 	go func(count *int, wg *sync.WaitGroup) {
 		defer wg.Done()
-		for r :=  range results {
+		for r := range results {
 			fmt.Println("out", r)
 			*count++
 		}
@@ -193,15 +193,15 @@ func recursePathsFinding(g *CaveGraph, p *InterimPath, outputs chan string) {
 	}
 
 	for _, e := range g.adjacencyList[p.getLast()] {
-		if p.canEnter(e) && e != p.getLast(){
+		if p.canEnter(e) && e != p.getLast() {
 			n := p.CopyAndAppend(e)
 			recursePathsFinding(g, &n, outputs)
 		}
 	}
 }
 
-func getVertices(gc *GraphConstructor)  chan string {
-	vertexCh:= make(chan string)
+func getVertices(gc *GraphConstructor) chan string {
+	vertexCh := make(chan string)
 	go func(ch chan string) {
 		defer close(vertexCh)
 		gc.vertexPairs.Range(func(k, v interface{}) bool {
@@ -216,7 +216,7 @@ type GraphConstructor struct {
 	vertexPairs sync.Map // [string]Appender
 }
 
-func (gc *GraphConstructor) addDirected(x string, y string)  {
+func (gc *GraphConstructor) addDirected(x string, y string) {
 	gc.vertexPairs.LoadOrStore(x, CreateAppender())
 	i, _ := gc.vertexPairs.Load(x)
 	a := i.(*Appender)
@@ -243,7 +243,7 @@ func isSmall(c string) bool {
 }
 
 type InterimPath struct {
-	path []string
+	path     []string
 	included map[string]bool
 }
 
@@ -251,9 +251,9 @@ func (p InterimPath) getLast() string {
 	return p.path[len(p.path)-1]
 }
 
-func (i InterimPath) CopyAndAppend(a string) InterimPath  {
+func (i InterimPath) CopyAndAppend(a string) InterimPath {
 	n := InterimPath{
-		path: append(i.path, a),
+		path:     append(i.path, a),
 		included: map[string]bool{},
 	}
 	for _, e := range n.path {
@@ -267,7 +267,9 @@ func (i InterimPath) isComplete() bool {
 }
 
 func (i InterimPath) canEnter(c string) bool {
-	if "start" == c {return false}
+	if "start" == c {
+		return false
+	}
 	visited, ok := i.included[c]
 
 	// Can enter iff !ok, ok && !visited, ok && visited && !isSmall(c)
