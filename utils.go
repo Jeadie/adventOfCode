@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 )
 
 func GetScanner(x uint8) *bufio.Scanner {
@@ -75,3 +76,35 @@ func scannerToChannel(s *bufio.Scanner, output chan string) {
 	}
 }
 
+type Appender struct {
+	l []string
+	m sync.Mutex
+}
+
+func (a *Appender) Append(s string)  {
+	a.m.Lock()
+	a.l = append(a.l, s)
+	a.m.Unlock()
+}
+
+func (a *Appender) GetSet() []string {
+	k := map[string]bool{}
+	r := []string{}
+	a.m.Lock()
+	for _, s := range a.l {
+		exists, ok := k[s]
+		if !(ok && exists) {
+			r = append(r, s)
+			k[s] = true
+		}
+	}
+	a.m.Unlock()
+	return r
+}
+
+func CreateAppender() *Appender {
+	return &Appender{
+		l: []string{},
+		m: sync.Mutex{},
+	}
+}

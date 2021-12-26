@@ -315,9 +315,9 @@ Given the starting energy levels of the dumbo octopuses in your cavern, simulate
 */
 
 const iterations = 10
-const octopusIncrementGoroutines = 2
-const octopusProcessFlashEventGoroutines = 2
-const octopusResetEventGoroutines = 2
+const octopusIncrementGoroutines = 1
+const octopusProcessFlashEventGoroutines = 1
+const octopusResetEventGoroutines = 1
 const octopusFlashValue = 9
 
 func Eleven() interface{} {
@@ -326,21 +326,19 @@ func Eleven() interface{} {
 	for i := 0; i <iterations; i++ {
 		fmt.Println("ITERATION", i)
 		oc = runIteration(oc)
-		//fmt.Println(oc)
+		fmt.Println(oc)
 	}
-	return oc.totalFlashes()
+	return oc.flashes
 }
 
 func runIteration(oc *OctopusCavern) *OctopusCavern {
 	// Let incrementing goroutines take arbitrarily designated rows
 	rowTokens := makeIntChan(0, oc.getRowCount())
 
-	octopusEvents := make(chan OctopusFlashEvent, 10)
 	octopusProcessEvents := makeRecursiveChan( 100)
 	resetEvents := makeRecursiveChan( 100)
 
 	wg := sync.WaitGroup{}
-	ofeWg := sync.WaitGroup{}
 
 	// Increment each Octopus
 	wg.Add(octopusIncrementGoroutines)
@@ -349,85 +347,83 @@ func runIteration(oc *OctopusCavern) *OctopusCavern {
 			defer wg.Done()
 			for r := range rowTokens {
 				incrementOctopusRow(oc, outputs, r)
-				//counter.Add(flashes)
 			}
-		}(oc, []RecursiveChan{octopusProcessEvents, resetEvents}, rowTokens, &wg, &ofeWg)
+		}(oc, []RecursiveChan{octopusProcessEvents, resetEvents}, rowTokens, &wg)
 	}
 
 	// Process OctopusFlashEvents
 	flashWg := sync.WaitGroup{}
 	flashWg.Add(octopusProcessFlashEventGoroutines)
 	for i := 0; i < octopusProcessFlashEventGoroutines; i++ {
-		go func(oc *OctopusCavern, processEvents chan OctopusFlashEvent, resetEvents chan OctopusFlashEvent, counter *sync.WaitGroup, wg *sync.WaitGroup) {
+		go func(oc *OctopusCavern, processEvents RecursiveChan, resetEvents RecursiveChan, wg *sync.WaitGroup) {
 			defer wg.Done()
-			publishers := []chan OctopusFlashEvent{processEvents, resetEvents}
-			for ofe := range processEvents {
-				flashes := processOctopusFlashEvent(oc, &ofe, publishers)
-				counter.Add(flashes)
-				counter.Done()
+			publishers := []RecursiveChan{processEvents, resetEvents}
+			for ofe := range processEvents.yielder() {
+				processOctopusFlashEvent(oc, &ofe, publishers)
 			}
-		}(oc, octopusProcessEvents, resetEvents, &ofeWg, &flashWg)
+			fmt.Println("yielder done, process")
+		}(oc, octopusProcessEvents, resetEvents, &flashWg)
 	}
 
 	// Return all Octopus >= octopusFlashValue  -> 0
 	resetWg := sync.WaitGroup{}
 	resetWg.Add(octopusResetEventGoroutines)
 	for i := 0; i < octopusResetEventGoroutines; i++ {
-		go func(oc *OctopusCavern, inputs chan OctopusFlashEvent, wg *sync.WaitGroup) {
+		go func(oc *OctopusCavern, inputs RecursiveChan, wg *sync.WaitGroup) {
 			defer wg.Done()
-			for o := range inputs {
+			for o := range inputs.yielder() {
 				oc.resetOctopus(o.i, o.j)
 			}
+			fmt.Println("yielder done, reseter")
 
 		}(oc, resetEvents, &resetWg)
 	}
-
 	wg.Wait()
-	close(octopusEvents)
 
-	ofeWg.Wait()
-	close(octopusProcessEvents)
+	octopusProcessEvents.close()
+	//fmt.Println("octopusProcessEvents.close()")
 
 	flashWg.Wait()
-	close(resetEvents)
+	resetEvents.close()
+	fmt.Println("resetEvents.close()")
 
 	resetWg.Wait()
 
 	return oc
 }
 
-func incrementOctopusRow(oc *OctopusCavern, outputs []chan OctopusFlashEvent, row int) int {
-	c := 0
+func incrementOctopusRow(oc *OctopusCavern, outputs []RecursiveChan, row int) {
 	for j := 0; j < oc.getColumnCount(); j++ {
-		c+=incrementAndCheckFlash(oc, outputs, row, j)
+		incrementAndCheckFlash(oc, outputs, row, j)
 	}
-	return c
 }
 
-func processOctopusFlashEvent(oc *OctopusCavern, event *OctopusFlashEvent, flashEventConsumers []chan OctopusFlashEvent) int {
+func processOctopusFlashEvent(oc *OctopusCavern, event *OctopusFlashEvent, flashEventConsumers []RecursiveChan) {
 	x, y := event.i, event.j
-	c:= 0
 
 	for i := maxInt(x-1, 0); i < minInt(x+1, oc.getRowCount()) ; i++ {
 		for j := maxInt(y-1, 0); j < minInt(y+1, oc.getRowCount()) ; j++ {
 			// Don't re-increment original flash event
 			if i != x || j != y {
-				c+=incrementAndCheckFlash(oc, flashEventConsumers, i, j)
+				incrementAndCheckFlash(oc, flashEventConsumers, i, j)
 			}
 		}
 	}
-	return c
 }
 
-func incrementAndCheckFlash(oc *OctopusCavern, output []chan OctopusFlashEvent, i int, j int) OctopusFlashEvent {
+func incrementAndCheckFlash(oc *OctopusCavern, output []RecursiveChan, i int, j int) int {
 	value := oc.increment(i, j)
 	if value == octopusFlashValue {
-		return OctopusFlashEvent{
+		e := OctopusFlashEvent{
 			i: i,
 			j: j,
 		}
+		for _, o := range output {
+			o.add(e)
+		}
+		return 1
 	}
-
+	return 0
 }
 
 func constructOctopusCavern() *OctopusCavern {
@@ -462,10 +458,6 @@ func (oc OctopusCavern) getColumnCount() int {
 		return 0
 	}
 	return len(oc.grid[0])
-}
-
-func (oc OctopusCavern) totalFlashes() uint64 {
-	return uint64(0)
 }
 
 func (oc *OctopusCavern) increment(i int, j int) int64 {
@@ -507,4 +499,26 @@ func (r RecursiveChan) add(o OctopusFlashEvent) {
 func (r RecursiveChan) get() OctopusFlashEvent {
 	defer r.counter.Done()
 	return <- r.c
+}
+
+func (r RecursiveChan) yielder() chan OctopusFlashEvent {
+	ch := make(chan OctopusFlashEvent)
+	go func() {
+		for true {
+			o, ok := <- r.c
+			if !ok {
+				close(ch)
+				fmt.Println("Yielder stops yielding...")
+				return
+			}
+			ch <- o
+			r.counter.Done()
+		}
+	}()
+	return ch
+}
+
+func (r RecursiveChan) close() {
+	defer close(r.c)
+	r.counter.Wait()
 }
