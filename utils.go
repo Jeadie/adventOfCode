@@ -42,6 +42,11 @@ func unsafeUintParse(x string) uint64 {
 	return y
 }
 
+func unsafeIntParse(x string) int {
+	y, _ := strconv.ParseInt(x, 10, 64)
+	return int(y)
+}
+
 func unsafeFloatParse(x string) float64 {
 	y, _ := strconv.ParseFloat(x, 10)
 	return y
