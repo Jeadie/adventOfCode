@@ -131,7 +131,7 @@ func Thirteen() interface{} {
 	s, tp := createTransparentPaper()
 	fi := createFoldInstructions(s)
 
-	inst:= fi[0]
+	inst := fi[0]
 	var tp1 TransparentPaper
 	if inst.IsHorizontal() {
 		tp1 = tp.ApplyHorizontal(inst)
@@ -155,8 +155,8 @@ func createFoldInstructions(s *bufio.Scanner) []FoldInstructions {
 		f := strings.SplitN(t, "=", 2)
 		d, i := f[0], f[1]
 		fi = append(fi, FoldInstructions{
-			dimension: d == "y" ,
-			index: uint(unsafeUintParse(i)),
+			dimension: d == "y",
+			index:     uint(unsafeUintParse(i)),
 		})
 	}
 	return fi
@@ -165,7 +165,7 @@ func createFoldInstructions(s *bufio.Scanner) []FoldInstructions {
 //
 func createTransparentPaper() (*bufio.Scanner, *TransparentPaper) {
 	s := GetScanner(13)
-	m := make(map [int][]int)
+	m := make(map[int][]int)
 
 	// Start with points
 	for s.Scan() {
@@ -195,14 +195,14 @@ type TransparentPaper struct {
 
 func (tp *TransparentPaper) ApplyHorizontal(fi FoldInstructions) TransparentPaper {
 	line := int(fi.index)
-	result := TransparentPaper{marks: make(map[int][]int) }
+	result := TransparentPaper{marks: make(map[int][]int)}
 	for i := 0; i < int(fi.index); i++ {
 		result.marks[line-i-1] = tp.Intersection(line-i-1, line+i)
 	}
 	return result
 }
 
-func (tp *TransparentPaper) ApplyVertical (fi FoldInstructions) TransparentPaper {
+func (tp *TransparentPaper) ApplyVertical(fi FoldInstructions) TransparentPaper {
 	// TODO: Implement
 	return TransparentPaper{marks: make(map[int][]int)}
 }
@@ -216,8 +216,8 @@ func (tp *TransparentPaper) getTotalCount() int {
 }
 
 func (tp *TransparentPaper) Intersection(i int, j int) []int {
-	a:= tp.marks[i]
-	b:= tp.marks[j]
+	a := tp.marks[i]
+	b := tp.marks[j]
 
 	frequencyTable := make(map[int]int)
 	result := []int{}
@@ -238,10 +238,9 @@ func (tp *TransparentPaper) Intersection(i int, j int) []int {
 	return result
 }
 
-
 type FoldInstructions struct {
 	dimension bool // false -> horizontal, true -> Columns
-	index uint //
+	index     uint //
 }
 
 func (fi FoldInstructions) IsHorizontal() bool {
