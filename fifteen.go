@@ -125,8 +125,8 @@ func (c *Chiton) getFullPathRisk() uint {
 
 func (c *Chiton) GetAdjacent(p *ChitonPath) []*ChitonPath {
 	// left, up, right, down
-	x := []int{p.x - 1, p.x, p.x + 1, p.x }
-	y := []int{p.y, p.y - 1, p.y,  p.y + 1}
+	x := []int{p.x - 1, p.x, p.x + 1, p.x}
+	y := []int{p.y, p.y - 1, p.y, p.y + 1}
 	var adjs []*ChitonPath
 
 	for i, xx := range x {
@@ -165,7 +165,7 @@ func (s *ChitonPathStack) pop() (*ChitonPath, *ChitonPathStack) {
 	return p, s.next
 }
 
-func (s *ChitonPathStack) push(p *ChitonPath) *ChitonPathStack  {
+func (s *ChitonPathStack) push(p *ChitonPath) *ChitonPathStack {
 	return &ChitonPathStack{
 		elem: p,
 		next: s,
