@@ -65,6 +65,13 @@ func minInt(x int, y int) int {
 	return y
 }
 
+func maxUint(x uint, y uint) uint {
+	if x > y {
+		return x
+	}
+	return y
+}
+
 func makeIntChan(a int, b int) chan int {
 	c := make(chan int, b-a)
 	defer close(c)

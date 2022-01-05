@@ -49,36 +49,23 @@ lowest total risk of any path from the top left to the bottom right?
 
 func Fifteen() interface{} {
 	c := InitChiton(GetScanner(15))
-	paths := make(chan ChitonPath, 100000) // TODO: This does not scale at all
-	paths <- ChitonPath{
+	c.recurseVisit(&ChitonPath{
 		x:       0,
-		y:       1,
-		netRisk: c.getRisk(0, 1),
-	}
-	paths <- ChitonPath{
-		x:       1,
 		y:       0,
-		netRisk: c.getRisk(1, 0),
-	}
-
-	i := 2
-	// TODO: BFS implementation has problems due to number of elements in path space. Convert to DFS
-	for p := range paths {
-		i--
-		fmt.Println(p, i)
-		isNewMin := c.updateChitonRisk(p)
-		if !isNewMin {
-			if i == 0 {
-				break
-			}
-			continue
-		}
-		for _, pp := range c.GetAdjacent(p) {
-			paths <- pp
-			i++
-		}
-	}
+		netRisk: 0,
+	})
 	return c.getFullPathRisk()
+}
+
+func (c *Chiton) recurseVisit(p *ChitonPath) {
+	isNewMin := c.updateChitonRisk(*p)
+	if !isNewMin {
+		return
+	}
+	fmt.Println(p.x, p.y)
+	for _, pp := range c.GetAdjacent(p) {
+		c.recurseVisit(pp)
+	}
 }
 
 func InitChiton(s *bufio.Scanner) *Chiton {
@@ -136,20 +123,20 @@ func (c *Chiton) getFullPathRisk() uint {
 	return c.minChitonRisk[c.getHeight()-1][c.getWidth()-1]
 }
 
-func (c *Chiton) GetAdjacent(p ChitonPath) []ChitonPath {
-	x := []int{p.x - 1, p.x + 1}
-	y := []int{p.y - 1, p.y + 1}
-	var adjs []ChitonPath
+func (c *Chiton) GetAdjacent(p *ChitonPath) []*ChitonPath {
+	// left, up, right, down
+	x := []int{p.x - 1, p.x, p.x + 1, p.x }
+	y := []int{p.y, p.y - 1, p.y,  p.y + 1}
+	var adjs []*ChitonPath
 
-	for _, xx := range x {
-		for _, yy := range y {
-			if 0 <= xx && xx < c.getWidth() && 0 <= yy && yy < c.getHeight() {
-				adjs = append(adjs, ChitonPath{
-					x:       xx,
-					y:       yy,
-					netRisk: p.netRisk + c.getRisk(xx, yy), // Continue on path from ChitonPath
-				})
-			}
+	for i, xx := range x {
+		yy := y[i]
+		if 0 <= xx && xx < c.getWidth() && 0 <= yy && yy < c.getHeight() {
+			adjs = append(adjs, &ChitonPath{
+				x:       xx,
+				y:       yy,
+				netRisk: p.netRisk + c.getRisk(xx, yy), // Continue on path from ChitonPath
+			})
 		}
 	}
 	return adjs
@@ -159,4 +146,28 @@ type ChitonPath struct {
 	x       int
 	y       int
 	netRisk uint
+}
+
+type ChitonPathStack struct {
+	elem *ChitonPath
+	next *ChitonPathStack
+}
+
+func InitChitonPathStack(p *ChitonPath) *ChitonPathStack {
+	return &ChitonPathStack{
+		elem: p,
+		next: nil,
+	}
+}
+
+func (s *ChitonPathStack) pop() (*ChitonPath, *ChitonPathStack) {
+	p := s.elem
+	return p, s.next
+}
+
+func (s *ChitonPathStack) push(p *ChitonPath) *ChitonPathStack  {
+	return &ChitonPathStack{
+		elem: p,
+		next: s,
+	}
 }
